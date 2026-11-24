@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>もえもえ共鳴パズル★スターライト・リンク</title>
+<style>
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --bg-outer: #0d0718;
+    --panel-bg: rgba(24, 13, 42, 0.94);
+    --panel-deep: #130924;
+    --pink: #ff6ec7;
+    --pink-soft: #fbcfe8;
+    --gold: #ffd166;
+    --cyan: #67e8f9;
+    --violet: #c084fc;
+    --mint: #6ee7b7;
+    --text-main: #fff8fc;
+    --text-muted: #d8b4fe;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100dvh;
+    background: radial-gradient(circle at 50% 24%, #2d124d 0%, #120822 58%, #07030e 100%);
+    color: var(--text-main);
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans JP", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+  }
+
+  /* PC Side Companion Panels */
+  .pc-side-card {
+    display: none;
+    width: 248px;
+    max-height: calc(100dvh - 32px);
+    background: rgba(23, 12, 41, 0.92);
+    border: 1.5px solid rgba(255, 110, 199, 0.45);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75);
+    flex-direction: column;
+    gap: 9px;
+    font-size: 12.5px;
+    line-height: 1.48;
+  }
+
+  @media (min-width: 960px) {
+    .pc-side-card {
+      display: flex;
+    }
+  }
+
+  .pc-side-title {
+    font-size: 13.5px;
+    font-weight: 900;
+    color: var(--gold);
+    border-bottom: 1px solid rgba(255, 110, 199, 0.35);
+    padding-bottom: 5px;
+  }
+
+  .key-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 3px 0;
+    border-bottom: 1px dashed rgba(216, 180, 254, 0.18);
+  }
+
+  .kbadge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: #2e1554;
+    border: 1px solid #f472b6;
+    color: #fef08a;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  /* Strict 9:16 Portrait Stage with Mobile Safe-Area Isolation */
+  #game-frame {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    width: min(100vw, calc((100dvh - var(--safe-top) - var(--safe-bottom)) * 9 / 16));
+    height: min(calc(100dvh - var(--safe-top) - var(--safe-bottom)), calc(100vw * 16 / 9));
+    max-height: 100dvh;
+    margin-top: var(--safe-top);
+    margin-bottom: var(--safe-bottom);
+    background: linear-gradient(180deg, #1b0b33 0%, #0e061d 100%);
+    border: 2px solid rgba(255, 110, 199, 0.65);
+    box-shadow: 0 0 60px rgba(255, 110, 199, 0.18), 0 0 70px rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    container-type: inline-size;
+  }
+
+  /* Top HUD */
+  #top-hud {
+    flex: 0 0 auto;
+    background: linear-gradient(180deg, rgba(43, 18, 76, 0.98) 0%, rgba(20, 9, 38, 0.96) 100%);
+    border-bottom: 1.5px solid rgba(255, 209, 102, 0.45);
+    padding: clamp(5px, 1.3cqw, 8px) clamp(8px, 2cqw, 12px);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 25;
+  }
+
+  .hud-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  #hud-stage-badge {
+    font-size: clamp(10px, 2.55cqw, 13.5px);
+    font-weight: 900;
+    color: var(--gold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #hud-moves-pill {
+    font-size: clamp(9.5px, 2.35cqw, 12.5px);
+    font-weight: 900;
+    color: #fef08a;
+    background: rgba(236, 72, 153, 0.24);
+    border: 1px solid rgba(251, 207, 232, 0.55);
+    border-radius: 999px;
+    padding: 1px 8px;
+    white-space: nowrap;
+  }
+
+  .hud-sub-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: clamp(9.5px, 2.3cqw, 12.5px);
+    font-weight: 800;
+  }
+
+  #hud-score-text {
+    color: var(--cyan);
+  }
+
+  #hud-moe-text {
+    color: var(--pink-soft);
+  }
+
+  .goal-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  #hud-goal-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #f472b6, #ffd166, #67e8f9);
+    transition: width 0.22s ease;
+  }
+
+  /* Heroine Strip (Top-Middle Character & Mood Banner) */
+  #heroine-strip {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: clamp(68px, 18.5cqw, 98px) 1fr;
+    align-items: center;
+    gap: clamp(6px, 1.5cqw, 10px);
+    padding: clamp(4px, 1cqw, 7px) clamp(8px, 2cqw, 12px);
+    background: linear-gradient(90deg, rgba(255, 110, 199, 0.14) 0%, rgba(36, 15, 64, 0.88) 55%, rgba(103, 232, 249, 0.12) 100%);
+    border-bottom: 1px solid rgba(255, 110, 199, 0.35);
+    z-index: 20;
+  }
+
+  #heroine-canvas {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    border: 1.5px solid var(--pink);
+    background: radial-gradient(circle at 50% 35%, rgba(255, 182, 224, 0.25), rgba(20, 9, 38, 0.95));
+    display: block;
+  }
+
+  .heroine-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .heroine-name-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  #heroine-name {
+    font-size: clamp(11.5px, 2.95cqw, 15.5px);
+    font-weight: 900;
+    color: var(--gold);
+  }
+
+  #heroine-role {
+    font-size: clamp(9px, 2.15cqw, 11.5px);
+    font-weight: 800;
+    color: var(--pink-soft);
+    white-space: nowrap;
+  }
+
+  #heroine-line {
+    font-size: clamp(10.5px, 2.65cqw, 14px);
+    line-height: 1.38;
+    color: #ffffff;
+    font-weight: 700;
+    min-height: clamp(28px, 7.2cqw, 40px);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Puzzle Board Playfield */
+  #board-stage {
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%;
+    padding: clamp(5px, 1.4cqw, 10px) clamp(8px, 2cqw, 12px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(4px, 1.1cqw, 7px);
+    overflow: hidden;
+  }
+
+  #puzzle-canvas {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 182, 224, 0.55);
+    box-shadow: inset 0 0 24px rgba(255, 110, 199, 0.14), 0 8px 24px rgba(0, 0, 0, 0.65);
+    touch-action: none;
+    cursor: pointer;
+    display: block;
+  }
+
+  /* Resonance Burst Bar */
+  #burst-bar-wrap {
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 clamp(8px, 2cqw, 12px) clamp(4px, 1cqw, 6px);
+    z-index: 20;
+  }
+
+  #btn-burst {
+    flex: 1 1 auto;
+    padding: clamp(5px, 1.35cqw, 8px) 10px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255, 209, 102, 0.5);
+    background: linear-gradient(90deg, #581c87 0%, #831843 100%);
+    color: #e2e8f0;
+    font-size: clamp(10px, 2.55cqw, 13.5px);
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+  }
+
+  #btn-burst.ready {
+    background: linear-gradient(90deg, #ec4899 0%, #f59e0b 55%, #06b6d4 100%);
+    border-color: #fef08a;
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(255, 110, 199, 0.75);
+    animation: burstPulse 1.1s infinite alternate;
+  }
+
+  @keyframes burstPulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.018); }
+  }
+
+  /* Bottom Control Dock (Safe from Mobile Browser Chrome) */
+  #bottom-controls {
+    flex: 0 0 auto;
+    background: linear-gradient(180deg, #210e3d 0%, #0d051c 100%);
+    border-top: 1.5px solid rgba(255, 110, 199, 0.45);
+    padding: clamp(5px, 1.3cqw, 8px) clamp(6px, 1.5cqw, 10px);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: clamp(3px, 0.85cqw, 6px);
+    z-index: 25;
+  }
+
+  .ctrl-btn {
+    background: linear-gradient(180deg, #35185e 0%, #1d0c36 100%);
+    border: 1px solid rgba(255, 182, 224, 0.45);
+    border-radius: 7px;
+    padding: clamp(5px, 1.25cqw, 7px) 2px;
+    color: #fff8fc;
+    font-size: clamp(9.5px, 2.3cqw, 12.5px);
+    font-weight: 800;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    cursor: pointer;
+    line-height: 1.15;
+  }
+
+  .ctrl-btn:active {
+    transform: scale(0.97);
+    border-color: #fef08a;
+  }
+
+  .ctrl-hint {
+    font-size: clamp(8px, 1.85cqw, 10px);
+    color: #f9a8d4;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* Full-Screen Overlays (Title, Story Cutscene, Stage Clear, Ending, Modals) */
+  .overlay-screen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 20%, rgba(236, 72, 153, 0.25) 0%, rgba(19, 9, 36, 0.97) 62%, #080311 100%);
+    z-index: 45;
+    display: none;
+    flex-direction: column;
+    padding: clamp(10px, 2.6cqw, 16px);
+    gap: clamp(8px, 2cqw, 12px);
+    overflow-y: auto;
+  }
+
+  .overlay-screen.active {
+    display: flex;
+  }
+
+  #title-screen {
+    z-index: 50;
+    justify-content: space-between;
+    text-align: center;
+  }
+
+  .title-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--pink);
+    background: rgba(255, 110, 199, 0.18);
+    color: #fbcfe8;
+    font-size: clamp(9.5px, 2.35cqw, 12.5px);
+    font-weight: 900;
+    letter-spacing: 1px;
+  }
+
+  .title-logo {
+    font-size: clamp(19px, 4.9cqw, 28px);
+    font-weight: 900;
+    line-height: 1.2;
+    margin: 4px 0;
+    background: linear-gradient(180deg, #ffffff 0%, #fbcfe8 48%, #ffd166 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 3px 10px rgba(255, 110, 199, 0.45));
+  }
+
+  .card-panel {
+    background: rgba(31, 15, 56, 0.92);
+    border: 1.5px solid rgba(255, 182, 224, 0.42);
+    border-radius: 10px;
+    padding: clamp(8px, 2.1cqw, 12px);
+    text-align: left;
+    font-size: clamp(10.5px, 2.65cqw, 13.8px);
+    line-height: 1.5;
+  }
+
+  .action-btn {
+    width: 100%;
+    padding: clamp(9px, 2.3cqw, 13px) 12px;
+    border-radius: 9px;
+    border: 1.5px solid rgba(255, 182, 224, 0.55);
+    background: linear-gradient(180deg, #431b78 0%, #240d45 100%);
+    color: #ffffff;
+    font-size: clamp(12px, 2.95cqw, 15.5px);
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .action-btn:hover, .action-btn:active {
+    border-color: #fef08a;
+    transform: scale(0.99);
+  }
+
+  .action-btn.moe-primary {
+    background: linear-gradient(180deg, #ec4899 0%, #9d174d 100%);
+    border-color: #fbcfe8;
+  }
+
+  .action-btn.gold-btn {
+    background: linear-gradient(180deg, #d97706 0%, #78350f 100%);
+    border-color: var(--gold);
+    color: #fef9c3;
+  }
+
+  .action-btn.danger-btn {
+    background: linear-gradient(180deg, #be123c 0%, #4c0519 100%);
+    border-color: #fda4af;
+    color: #ffe4e6;
+  }
+
+  .screen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1.5px solid rgba(255, 182, 224, 0.4);
+    padding-bottom: 6px;
+  }
+
+  .screen-title {
+    font-size: clamp(13px, 3.3cqw, 17.5px);
+    font-weight: 900;
+    color: var(--gold);
+  }
+
+  .mini-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 182, 224, 0.55);
+    background: #331461;
+    color: #fff8fc;
+    font-size: clamp(10.5px, 2.55cqw, 13px);
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .mini-btn.danger {
+    background: #881337;
+    border-color: #fda4af;
+  }
+
+  .mini-btn.gold {
+    background: #92400e;
+    border-color: #ffd166;
+    color: #fef08a;
+  }
+
+  /* Toast Notification */
+  #toast-banner {
+    position: absolute;
+    top: 48px;
+    left: 12px;
+    right: 12px;
+    background: rgba(33, 13, 62, 0.97);
+    border: 1.5px solid var(--gold);
+    border-radius: 9px;
+    padding: 8px 12px;
+    font-size: clamp(11px, 2.75cqw, 14px);
+    font-weight: 900;
+    color: #fef08a;
+    text-align: center;
+    z-index: 70;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85);
+  }
+
+  #toast-banner.show {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+  <!-- PC Left Companion Guide -->
+  <aside class="pc-side-card" aria-label="PCキーボード操作ガイド">
+    <div class="pc-side-title">⌨ PCキーボード操作ガイド</div>
+    <div class="key-row"><span>パズルカーソル移動</span><span class="kbadge">WASD / 矢印</span></div>
+    <div class="key-row"><span>ピース選択 / スワップ</span><span class="kbadge">Z / Enter / Space</span></div>
+    <div class="key-row"><span>共鳴バースト発動</span><span class="kbadge">X / E</span></div>
+    <div class="key-row"><span>デモ / ストーリー進行</span><span class="kbadge">Enter / Space</span></div>
+    <div class="key-row"><span>セーブ画面</span><span class="kbadge">K</span></div>
+    <div class="key-row"><span>ロード画面</span><span class="kbadge">O</span></div>
+    <div class="key-row"><span>ヒロイン図鑑 / ヘルプ</span><span class="kbadge">H</span></div>
+    <div class="key-row"><span>メニュー / 閉じる</span><span class="kbadge">Esc</span></div>
+    <div class="key-row"><span>サウンド ON / OFF</span><span class="kbadge">M</span></div>
+    <div style="color:var(--text-muted);font-size:11.5px;margin-top:4px;">
+      ※スマホではピースの「ドラッグ」または「2回タップ」で隣り合うピースを入れ替えられます！
+    </div>
+  </aside>
+
+  <!-- Main 9:16 Portrait Game Frame -->
+  <main id="game-frame">
+    <div id="toast-banner" role="status" aria-live="polite"></div>
+
+    <!-- Top HUD -->
+    <header id="top-hud">
+      <div class="hud-row">
+        <span id="hud-stage-badge">STAGE 1：ときめきスターダスト</span>
+        <span id="hud-moves-pill">残り手数 18</span>
+      </div>
+      <div class="goal-track">
+        <div id="hud-goal-bar"></div>
+      </div>
+      <div class="hud-sub-row">
+        <span id="hud-score-text">共鳴Pt: 0 / 1,200</span>
+        <span id="hud-moe-text">♡ 萌え度: 0%</span>
+      </div>
+    </header>
+
+    <!-- Heroine Mood & Voice Strip -->
+    <section id="heroine-strip">
+      <canvas id="heroine-canvas"></canvas>
+      <div class="heroine-bubble">
+        <div class="heroine-name-line">
+          <span id="heroine-name">ももか</span>
+          <span id="heroine-role">スターライト歌姫</span>
+        </div>
+        <div id="heroine-line">「同じカケラを3つ以上つなげて、キラキラの共鳴を起こそっ♡」</div>
+      </div>
+    </section>
+
+    <!-- Puzzle Playfield -->
+    <section id="board-stage">
+      <canvas id="puzzle-canvas"></canvas>
+    </section>
+
+    <!-- Resonance Burst Gauge Button -->
+    <div id="burst-bar-wrap">
+      <button id="btn-burst" type="button">✦ 共鳴バーストゲージ：0 / 100% [X]</button>
+    </div>
+
+    <!-- Bottom Control Dock -->
+    <footer id="bottom-controls">
+      <button id="btn-story" type="button" class="ctrl-btn"><span>📖 物語</span><span class="ctrl-hint">[Enter]</span></button>
+      <button id="btn-save" type="button" class="ctrl-btn"><span>💾 セーブ</span><span class="ctrl-hint">[K]</span></button>
+      <button id="btn-load" type="button" class="ctrl-btn"><span>📂 ロード</span><span class="ctrl-hint">[O]</span></button>
+      <button id="btn-guide" type="button" class="ctrl-btn"><span>💖 図鑑</span><span class="ctrl-hint">[H]</span></button>
+      <button id="btn-menu" type="button" class="ctrl-btn"><span>☰ メニュー</span><span class="ctrl-hint">[Esc]</span></button>
+    </footer>
+
+    <!-- 1. TITLE SCREEN -->
+    <div id="title-screen" class="overlay-screen active">
+      <div style="margin-top:2px;">
+        <div class="title-badge">ORIGINAL RESONANCE PUZZLE × MOE GIRLS</div>
+        <h1 class="title-logo">もえもえ共鳴パズル<br>★スターライト・リンク★</h1>
+      </div>
+
+      <canvas id="title-showcase-canvas" style="width:100%;height:142px;border-radius:12px;border:1.5px solid var(--pink);"></canvas>
+
+      <div class="card-panel">
+        <div style="color:var(--gold);font-weight:900;margin-bottom:3px;">◆ 今までにない「スターライト共鳴」ルール</div>
+        ・<b>隣り合うカケラを入れ替え（スワップ）：</b>縦・横に<b>3つ以上</b>そろえて消去！<br>
+        ・<b>4つそろいで『共鳴ビーム』、5つそろいで『スターライト超新星』</b>が発生し、ラインや同色を豪快一掃！<br>
+        ・<b>5人の萌えヒロインと全5ステージ＋大団円エンディング！</b>連鎖するほどヒロインの甘い応援＆萌え度が上昇♡
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <button id="btn-start-new" type="button" class="action-btn moe-primary">♡ プロローグから始める <span class="kbadge">Enter</span></button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button id="btn-title-load" type="button" class="action-btn gold-btn">📂 続きから再開 <span class="kbadge">O</span></button>
+          <button id="btn-title-guide" type="button" class="action-btn">💖 5人のヒロイン図鑑</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button id="btn-title-sound" type="button" class="action-btn" style="padding:7px;font-size:12px;">🔊 サウンド: ON <span class="kbadge">M</span></button>
+          <button id="btn-title-del" type="button" class="action-btn danger-btn" style="padding:7px;font-size:12px;">🗑 セーブデータ削除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. STORY / STAGE CLEAR / ENDING OVERLAY -->
+    <div id="story-screen" class="overlay-screen">
+      <div class="screen-header">
+        <span id="story-screen-title" class="screen-title">📖 ストーリー</span>
+        <button id="btn-story-skip" type="button" class="mini-btn gold">パズルへ進む ▶</button>
+      </div>
+
+      <canvas id="story-portrait-canvas" style="width:100%;height:178px;border-radius:12px;border:1.5px solid var(--gold);"></canvas>
+
+      <div class="card-panel" style="flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:6px;">
+        <div id="story-speaker-tag" style="color:var(--pink-soft);font-weight:900;font-size:13px;">ももか（スターライト歌姫）</div>
+        <div id="story-body-text" style="font-size:13px;line-height:1.62;color:#ffffff;"></div>
+      </div>
+
+      <div id="story-action-row" style="display:flex;gap:8px;">
+        <button id="btn-story-next" type="button" class="action-btn moe-primary">次のセリフへ <span class="kbadge">Enter</span></button>
+      </div>
+    </div>
+
+    <!-- 3. SAVE / LOAD / DELETE MODAL -->
+    <div id="save-screen" class="overlay-screen">
+      <div class="screen-header">
+        <span id="save-screen-title" class="screen-title">💾 セーブ・データ管理</span>
+        <button id="btn-close-save" type="button" class="mini-btn">✕ 閉じる [Esc]</button>
+      </div>
+      <div id="save-slots-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div style="margin-top:auto;padding-top:8px;border-top:1px solid rgba(255,255,255,0.14);">
+        <button id="btn-delete-all-saves" type="button" class="action-btn danger-btn">🗑 すべてのセーブデータを削除する</button>
+      </div>
+    </div>
+
+    <!-- 4. HEROINES & HOW-TO-PLAY MODAL -->
+    <div id="guide-screen" class="overlay-screen">
+      <div class="screen-header">
+        <span class="screen-title">💖 萌えヒロイン図鑑＆ルール解説</span>
+        <button id="btn-close-guide" type="button" class="mini-btn">✕ 閉じる [Esc]</button>
+      </div>
+      <div class="card-panel" style="font-size:11.5px;">
+        <strong style="color:var(--gold);">◆ 共鳴パズルのコツ：</strong><br>
+        6×7盤面で上下左右のピースを入れ替え、同種3つ以上で消去！連鎖（チェイン）や4つ・5つ消しで<b>共鳴バーストゲージ</b>が溜まり、満タンで<b>「共鳴バースト」</b>を発動すると盤面のキラキラを大量浄化して高スコア＆萌え度アップ！
+      </div>
+      <div id="heroine-dex-list" style="display:flex;flex-direction:column;gap:7px;"></div>
+    </div>
+
+    <!-- 5. SYSTEM MENU MODAL -->
+    <div id="menu-screen" class="overlay-screen">
+      <div class="screen-header">
+        <span class="screen-title">☰ システムメニュー</span>
+        <button id="btn-close-menu" type="button" class="mini-btn">✕ 戻る [Esc]</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+        <button id="btn-menu-sound" type="button" class="action-btn gold-btn">🔊 サウンド: ON [M]</button>
+        <button id="btn-menu-retry" type="button" class="action-btn">🔄 このステージをやり直す</button>
+      </div>
+      <div class="card-panel">
+        <div style="color:var(--gold);font-weight:900;margin-bottom:4px;">◆ ステージ選択（解放済みまで）</div>
+        <div id="stage-jump-list" style="display:flex;flex-direction:column;gap:5px;"></div>
+      </div>
+      <button id="btn-menu-title" type="button" class="action-btn danger-btn">🏠 タイトル画面へ戻る</button>
+    </div>
+  </main>
+
+  <!-- PC Right Companion Story & Status -->
+  <aside class="pc-side-card" aria-label="ステージ＆萌えステータス">
+    <div class="pc-side-title">✨ 全5ステージ＆萌え物語</div>
+    <div style="font-size:11.5px;color:#f5d0fe;display:flex;flex-direction:column;gap:4px;">
+      <div><b style="color:#ffd166;">ST.1</b> ももか（ときめきスターダスト）</div>
+      <div><b style="color:#ffd166;">ST.2</b> ほのか（お菓子とひだまり魔法）</div>
+      <div><b style="color:#ffd166;">ST.3</b> りんね（ツンデレ星詠みの巫女）</div>
+      <div><b style="color:#ffd166;">ST.4</b> さくら（桜舞う恋のメロディ）</div>
+      <div><b style="color:#ffd166;">ST.5</b> みるく（甘々うさ耳天使の奇跡）</div>
+    </div>
+    <div id="pc-side-readout" style="margin-top:auto;padding-top:8px;border-top:1px solid rgba(255,182,224,0.25);font-size:11.5px;color:#fef08a;">
+      総スコア: 0 ｜ 萌え度: 0%
+    </div>
+  </aside>
+
+<script>
+(() => {
+  'use strict';
+
+  const COLS = 6;
+  const ROWS = 7;
+  const GEM_TYPES = 5;
+  const SAVE_KEY = 'moemoe_starlight_saves_v1';
+  const MAX_SLOTS = 3;
+
+  const GEMS = [
+    { id: 0, glyph: '♥', name: 'ハート', color: '#ff5ca8', glow: 'rgba(255, 92, 168, 0.55)', bg: '#4a1030' },
+    { id: 1, glyph: '★', name: 'スター', color: '#ffd166', glow: 'rgba(255, 209, 102, 0.55)', bg: '#473309' },
+    { id: 2, glyph: '♪', name: 'ノーツ', color: '#67e8f9', glow: 'rgba(103, 232, 249, 0.55)', bg: '#0c3b4a' },
+    { id: 3, glyph: '✿', name: 'ブロッサム', color: '#f9a8d4', glow: 'rgba(249, 168, 212, 0.55)', bg: '#491936' },
+    { id: 4, glyph: '✦', name: 'クリスタル', color: '#c084fc', glow: 'rgba(192, 132, 252, 0.55)', bg: '#321457' }
+  ];
+
+  const HEROINES = [
+    {
+      id: 'momoka',
+      name: 'ももか',
+      role: 'スターライト歌姫・ツインテール',
+      hair: '#ff77b7',
+      ribbon: '#ffd166',
+      eye: '#9d174d',
+      outfit: '#db2777',
+      bio: '「ステージの星のカケラをキミとつなぎたいなっ♡ 失敗しても笑顔でいこっ！」',
+      cheerLines: [
+        '「わぁっ、今の一手すごくキラキラしてたよっ♡」',
+        '「キミの指先、魔法みたいにステキだもんっ★」',
+        '「もっともっと連鎖しちゃおーっ！ 応援してるよ♪」'
+      ],
+      intro: '「はじめまして、キミっ！ 星空のパズルステージ『スターライト・リンク』へようこそ♡ 同じカケラを3つ以上そろえて、あたしと一緒にときめきの光を灯そっ！」'
+    },
+    {
+      id: 'honoka',
+      name: 'ほのか',
+      role: 'ひだまりパティシエール・お団子ヘア',
+      hair: '#f59e0b',
+      ribbon: '#fb7185',
+      eye: '#78350f',
+      outfit: '#ea580c',
+      bio: '「焼きたてクッキーみたいに甘〜い連鎖、作ってみせるねっ♪」',
+      cheerLines: [
+        '「えへへ、甘いコンボがこんがり焼きあがり〜っ♡」',
+        '「無理しないでねっ。ほのかがずっとそばにいるから♪」',
+        '「4つ消しや5つ消し、すっごくおいしそうな光だねっ★」'
+      ],
+      intro: '「おつかれさまっ♡ ここは甘い香りとひだまりのステージだよ。目標スコアまでカケラを集めて、とっておきのハッピータイムにしようね♪」'
+    },
+    {
+      id: 'rinne',
+      name: 'りんね',
+      role: '星詠みの巫女・ツンデレ紫髪',
+      hair: '#a855f7',
+      ribbon: '#38bdf8',
+      eye: '#4c1d95',
+      outfit: '#6d28d9',
+      bio: '「べ、別にキミのために星の導きを教えてあげるわけじゃないんだからねっ…♡」',
+      cheerLines: [
+        '「ふ、ふんっ！ そのくらいの連鎖、当然よね……っ♡」',
+        '「すごいじゃない……少しだけ、見直しちゃったかも♪」',
+        '「バーストが溜まったわよ！ 気合い入れていきなさいっ★」'
+      ],
+      intro: '「星々の共鳴が乱れているわ……って、キミが来てくれたの？ 仕方ないわね、あたしの星詠みでサポートしてあげる。感謝しなさいよねっ♡」'
+    },
+    {
+      id: 'sakura',
+      name: 'さくら',
+      role: '桜舞う恋のヴァイオリニスト・姫カット',
+      hair: '#f472b6',
+      ribbon: '#fef08a',
+      eye: '#831843',
+      outfit: '#be185d',
+      bio: '「桜吹雪のように舞い散る光と、キミへの想いを旋律に乗せて……」',
+      cheerLines: [
+        '「まるで春風が吹いたみたい……きれいな連鎖ですわ♡」',
+        '「キミと奏でるパズルの調べ、ずっと聞いていたいな♪」',
+        '「桜色のときめきが、胸いっぱいに広がっていきます……★」'
+      ],
+      intro: '「ようこそ、桜舞う夜の音楽堂へ。カケラが消えるたびに、優しいメロディが響き渡りますわ。キミの素敵な手さばき、見せてくださいませ♡」'
+    },
+    {
+      id: 'miruku',
+      name: 'みるく',
+      role: '甘々うさ耳天使・しろふわツイン',
+      hair: '#f8fafc',
+      ribbon: '#f472b6',
+      eye: '#db2777',
+      outfit: '#f43f5e',
+      bio: '「ぴょんっ♡ みるく、キミのことだーいすきっ！ 一緒に奇跡を起こそっ☆」',
+      cheerLines: [
+        '「ぴょんぴょんっ！ みるくのお耳もぴくぴくしちゃうよ♡」',
+        '「わーい！ キミってほんとにすごいヒーローさんだねっ★」',
+        '「ぜんぶの光をつなげて、みんなでしあわせになろーっ♪」'
+      ],
+      intro: '「やっほーっ、みるくだよっ♡ ここまでたどり着いたキミはほんとにすごいっ！ 最後のステージも、みるくが全力でぎゅーって応援しちゃうからねっ☆」'
+    }
+  ];
+
+  const STAGES = [
+    { id: 1, title: 'STAGE 1：ときめきスターダスト', heroineIdx: 0, goal: 1100, moves: 18 },
+    { id: 2, title: 'STAGE 2：ひだまりスイートリンク', heroineIdx: 1, goal: 1850, moves: 18 },
+    { id: 3, title: 'STAGE 3：星詠みツンデレ回廊', heroineIdx: 2, goal: 2700, moves: 19 },
+    { id: 4, title: 'STAGE 4：桜花ノクターン共鳴', heroineIdx: 3, goal: 3700, moves: 20 },
+    { id: 5, title: 'STAGE 5：みるく天使のスターライト奇跡', heroineIdx: 4, goal: 4900, moves: 21 }
+  ];
+
+  /* =========================================================
+     1. SWEET CHIME WEB AUDIO SYNTHESIZER
+     ========================================================= */
+  class SweetSoundEngine {
+    constructor() {
+      this.ctx = null;
+      this.enabled = true;
+    }
+
+    unlock() {
+      try {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) this.ctx = new AC();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      } catch (_e) {
+        // Ignore
+      }
+    }
+
+    toggle() {
+      this.enabled = !this.enabled;
+      return this.enabled;
+    }
+
+    tone(freq, dur = 0.14, type = 'triangle', vol = 0.04, delay = 0) {
+      if (!this.enabled || !freq) return;
+      this.unlock();
+      if (!this.ctx) return;
+      try {
+        const t = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(vol, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + dur + 0.02);
+      } catch (_e) {
+        // Ignore
+      }
+    }
+
+    select() {
+      this.tone(783.99, 0.07, 'sine', 0.035, 0);
+      this.tone(1046.5, 0.09, 'triangle', 0.03, 0.04);
+    }
+
+    invalid() {
+      this.tone(240, 0.12, 'sawtooth', 0.025, 0);
+    }
+
+    match(chain = 1, specialCount = 0) {
+      const base = 523.25 * Math.pow(1.08, Math.min(chain - 1, 8));
+      [1, 1.25, 1.5, 2].forEach((m, i) => {
+        this.tone(base * m, 0.14, 'triangle', 0.038, i * 0.045);
+      });
+      if (specialCount > 0) {
+        this.tone(1567.98, 0.25, 'sine', 0.045, 0.12);
+      }
+    }
+
+    burst() {
+      [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98].forEach((f, idx) => {
+        this.tone(f, 0.22, 'triangle', 0.048, idx * 0.05);
+      });
+    }
+
+    stageClear() {
+      [587.33, 739.99, 880, 1174.66].forEach((f, idx) => {
+        this.tone(f, 0.25, 'sine', 0.05, idx * 0.08);
+      });
+    }
+  }
+
+  const sfx = new SweetSoundEngine();
+
+  /* =========================================================
+     2. TOAST & GAME STATE
+     ========================================================= */
+  let toastTimer = null;
+  function showToast(msg, ms = 2600) {
+    const el = document.getElementById('toast-banner');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+  }
+
+  const state = {
+    stageIdx: 0,
+    score: 0,
+    movesLeft: STAGES[0].moves,
+    moe: 0,
+    burstGauge: 0, // 0..100
+    maxUnlockedStage: 1,
+    grid: [], // { type: 0..4, special: 'none'|'line'|'nova' }
+    cursor: { r: 3, c: 2 },
+    selected: null, // { r, c }
+    busy: false,
+    particles: [],
+    beams: [],
+    saveMode: 'save',
+    pendingDelSlot: null,
+    pendingPurgeAll: false,
+    storyQueue: [],
+    storyIndex: 0,
+    storyMode: 'intro' // 'intro' | 'clear' | 'ending'
+  };
+
+  /* =========================================================
+     3. PUZZLE BOARD LOGIC (MATCH-3, LINE BEAM, NOVA, CASCADE)
+     ========================================================= */
+  function makeGem(type = null, special = 'none') {
+    const t = type !== null ? type : Math.floor(Math.random() * GEM_TYPES);
+    return { type: t, special };
+  }
+
+  function hasImmediateMatchAt(grid, r, c, type) {
+    let hCount = 1;
+    for (let cc = c - 1; cc >= 0 && grid[r][cc]?.type === type; cc--) hCount++;
+    for (let cc = c + 1; cc < COLS && grid[r][cc]?.type === type; cc++) hCount++;
+    if (hCount >= 3) return true;
+
+    let vCount = 1;
+    for (let rr = r - 1; rr >= 0 && grid[rr][c]?.type === type; rr--) vCount++;
+    for (let rr = r + 1; rr < ROWS && grid[rr][c]?.type === type; rr++) vCount++;
+    return vCount >= 3;
+  }
+
+  function hasAnyValidMove(grid) {
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const dirs = [[0, 1], [1, 0]];
+        for (const [dr, dc] of dirs) {
+          const nr = r + dr;
+          const nc = c + dc;
+          if (nr < ROWS && nc < COLS) {
+            swapCells(grid, r, c, nr, nc);
+            const matched = findMatches(grid).length > 0;
+            swapCells(grid, r, c, nr, nc);
+            if (matched) return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  function generatePlayableGrid() {
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const g = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          let chosen = Math.floor(Math.random() * GEM_TYPES);
+          for (let k = 0; k < GEM_TYPES; k++) {
+            const cand = (chosen + k) % GEM_TYPES;
+            if (!hasImmediateMatchAt(g, r, c, cand)) {
+              chosen = cand;
+              break;
+            }
+          }
+          g[r][c] = makeGem(chosen, 'none');
+        }
+      }
+      if (hasAnyValidMove(g)) return g;
+    }
+    const fallback = Array.from({ length: ROWS }, (_, r) =>
+      Array.from({ length: COLS }, (_, c) => makeGem((r + c) % GEM_TYPES, 'none'))
+    );
+    return fallback;
+  }
+
+  function swapCells(grid, r1, c1, r2, c2) {
+    const tmp = grid[r1][c1];
+    grid[r1][c1] = grid[r2][c2];
+    grid[r2][c2] = tmp;
+  }
+
+  function findMatches(grid) {
+    const visitedH = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+    const visitedV = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+    const groups = [];
+
+    // Horizontal runs
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (visitedH[r][c] || !grid[r][c]) continue;
+        const t = grid[r][c].type;
+        const cells = [{ r, c }];
+        let cc = c + 1;
+        while (cc < COLS && grid[r][cc]?.type === t) {
+          cells.push({ r, c: cc });
+          cc++;
+        }
+        if (cells.length >= 3) {
+          cells.forEach(p => { visitedH[p.r][p.c] = true; });
+          groups.push({ cells, axis: 'h' });
+        }
+      }
+    }
+
+    // Vertical runs
+    for (let c = 0; c < COLS; c++) {
+      for (let r = 0; r < ROWS; r++) {
+        if (visitedV[r][c] || !grid[r][c]) continue;
+        const t = grid[r][c].type;
+        const cells = [{ r, c }];
+        let rr = r + 1;
+        while (rr < ROWS && grid[rr][c]?.type === t) {
+          cells.push({ r: rr, c });
+          rr++;
+        }
+        if (cells.length >= 3) {
+          cells.forEach(p => { visitedV[p.r][p.c] = true; });
+          groups.push({ cells, axis: 'v' });
+        }
+      }
+    }
+
+    return groups;
+  }
+
+  function expandSpecialEffects(grid, toClearSet, queue) {
+    while (queue.length > 0) {
+      const { r, c } = queue.shift();
+      const cell = grid[r]?.[c];
+      if (!cell) continue;
+      if (cell.special === 'line') {
+        for (let cc = 0; cc < COLS; cc++) {
+          const key = `${r},${cc}`;
+          if (!toClearSet.has(key)) {
+            toClearSet.add(key);
+            if (grid[r][cc]?.special !== 'none') queue.push({ r, c: cc });
+          }
+        }
+        spawnBeam(r, -1, '#ffd166');
+      } else if (cell.special === 'nova') {
+        const targetType = cell.type;
+        for (let rr = 0; rr < ROWS; rr++) {
+          for (let cc = 0; cc < COLS; cc++) {
+            if (grid[rr][cc]?.type === targetType) {
+              const key = `${rr},${cc}`;
+              if (!toClearSet.has(key)) {
+                toClearSet.add(key);
+                if (grid[rr][cc]?.special !== 'none') queue.push({ r: rr, c: cc });
+              }
+            }
+          }
+        }
+        spawnNovaBurst(r, c, '#ff6ec7');
+      }
+    }
+  }
+
+  function dropAndRefill(grid) {
+    for (let c = 0; c < COLS; c++) {
+      let writeRow = ROWS - 1;
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (grid[r][c] !== null) {
+          grid[writeRow][c] = grid[r][c];
+          if (writeRow !== r) grid[r][c] = null;
+          writeRow--;
+        }
+      }
+      for (let r = writeRow; r >= 0; r--) {
+        grid[r][c] = makeGem(null, 'none');
+      }
+    }
+  }
+
+  function setHeroineCheer(customText = null) {
+    const stg = STAGES[state.stageIdx] || STAGES[0];
+    const h = HEROINES[stg.heroineIdx] || HEROINES[0];
+    document.getElementById('heroine-name').textContent = h.name;
+    document.getElementById('heroine-role').textContent = h.role;
+    if (customText) {
+      document.getElementById('heroine-line').textContent = customText;
+    } else {
+      const pick = h.cheerLines[Math.floor(Math.random() * h.cheerLines.length)];
+      document.getElementById('heroine-line').textContent = pick;
+    }
+  }
+
+  function updateHud() {
+    const stg = STAGES[state.stageIdx] || STAGES[0];
+    document.getElementById('hud-stage-badge').textContent = stg.title;
+    document.getElementById('hud-moves-pill').textContent = `残り手数 ${Math.max(0, state.movesLeft)}`;
+
+    const pct = Math.min(100, Math.round((state.score / stg.goal) * 100));
+    document.getElementById('hud-goal-bar').style.width = `${pct}%`;
+    document.getElementById('hud-score-text').textContent = `共鳴Pt: ${state.score.toLocaleString()} / ${stg.goal.toLocaleString()}`;
+    document.getElementById('hud-moe-text').textContent = `♡ 萌え度: ${state.moe}%`;
+
+    const bBtn = document.getElementById('btn-burst');
+    const bVal = Math.min(100, Math.round(state.burstGauge));
+    if (bVal >= 100) {
+      bBtn.classList.add('ready');
+      bBtn.textContent = `✦ 共鳴バースト発動可能！(100%) [X]`;
+    } else {
+      bBtn.classList.remove('ready');
+      bBtn.textContent = `✦ 共鳴バーストゲージ：${bVal} / 100% [X]`;
+    }
+
+    const pcSide = document.getElementById('pc-side-readout');
+    if (pcSide) {
+      pcSide.textContent = `Stage ${stg.id}/5 ｜ Pt: ${state.score.toLocaleString()} ｜ 萌え度: ${state.moe}%`;
+    }
+  }
+
+  function sleep(ms) {
+    return new Promise(res => setTimeout(res, ms));
+  }
+
+  async function resolveMatchesLoop() {
+    let chain = 0;
+    while (true) {
+      const groups = findMatches(state.grid);
+      if (groups.length === 0) break;
+      chain++;
+
+      const toClear = new Set();
+      const specialQueue = [];
+      const promotions = []; // { r, c, type, special }
+
+      groups.forEach(grp => {
+        grp.cells.forEach(pt => {
+          const key = `${pt.r},${pt.c}`;
+          if (toClear.has(key)) {
+            if (state.grid[pt.r][pt.c]?.special !== 'none') {
+              specialQueue.push({ r: pt.r, c: pt.c });
+            }
+          } else {
+            toClear.add(key);
+            if (state.grid[pt.r][pt.c]?.special !== 'none') {
+              specialQueue.push({ r: pt.r, c: pt.c });
+            }
+          }
+        });
+
+        if (grp.cells.length >= 5) {
+          const mid = grp.cells[Math.floor(grp.cells.length / 2)];
+          promotions.push({ r: mid.r, c: mid.c, type: state.grid[mid.r][mid.c].type, special: 'nova' });
+        } else if (grp.cells.length >= 4) {
+          const mid = grp.cells[Math.floor(grp.cells.length / 2)];
+          promotions.push({ r: mid.r, c: mid.c, type: state.grid[mid.r][mid.c].type, special: 'line' });
+        }
+      });
+
+      expandSpecialEffects(state.grid, toClear, specialQueue);
+
+      const clearedCount = toClear.size;
+      const gainedScore = clearedCount * 90 * chain + (promotions.length * 250);
+      state.score += gainedScore;
+      state.moe = Math.min(999, state.moe + clearedCount * 2 + (chain - 1) * 4);
+      state.burstGauge = Math.min(100, state.burstGauge + clearedCount * 5 + (chain - 1) * 8);
+
+      sfx.match(chain, promotions.length);
+      updateHud();
+      if (chain >= 2 || promotions.length > 0) {
+        setHeroineCheer(
+          promotions.length > 0
+            ? `「すごーいっ！ 特殊共鳴が発生したよっ★ ${chain}チェイン！」`
+            : `「やったねっ！ ${chain}チェイン連続共鳴だよ〜♡」`
+        );
+      }
+
+      toClear.forEach(key => {
+        const [rr, cc] = key.split(',').map(Number);
+        const gemObj = state.grid[rr][cc];
+        spawnGemBurst(rr, cc, GEMS[gemObj?.type || 0].color);
+        state.grid[rr][cc] = null;
+      });
+
+      promotions.forEach(p => {
+        state.grid[p.r][p.c] = makeGem(p.type, p.special);
+      });
+
+      await sleep(230);
+      dropAndRefill(state.grid);
+      updateHud();
+      await sleep(210);
+    }
+
+    if (!hasAnyValidMove(state.grid)) {
+      state.grid = generatePlayableGrid();
+      showToast('盤面の配置をキラキラ再シャッフルしました☆');
+    }
+  }
+
+  async function attemptSwap(r1, c1, r2, c2) {
+    if (state.busy) return;
+    if (r2 < 0 || r2 >= ROWS || c2 < 0 || c2 >= COLS) return;
+    if (Math.abs(r1 - r2) + Math.abs(c1 - c2) !== 1) return;
+
+    state.busy = true;
+    state.selected = null;
+    swapCells(state.grid, r1, c1, r2, c2);
+    await sleep(130);
+
+    const matches = findMatches(state.grid);
+    if (matches.length === 0) {
+      swapCells(state.grid, r1, c1, r2, c2);
+      sfx.invalid();
+      showToast('3つ以上そろう場所に入れ替えてみよう♡');
+      state.busy = false;
+      return;
+    }
+
+    state.movesLeft = Math.max(0, state.movesLeft - 1);
+    updateHud();
+    await resolveMatchesLoop();
+    checkStageOutcome();
+    state.busy = false;
+  }
+
+  async function triggerResonanceBurst() {
+    if (state.busy) return;
+    if (state.burstGauge < 100) {
+      showToast('共鳴バーストゲージ100%で発動できるよっ♡');
+      return;
+    }
+    state.busy = true;
+    state.selected = null;
+    state.burstGauge = 0;
+    sfx.burst();
+
+    const stg = STAGES[state.stageIdx] || STAGES[0];
+    const h = HEROINES[stg.heroineIdx] || HEROINES[0];
+    showToast(`✦ ${h.name}の共鳴バースト発動！！ 盤面を浄化中… ✦`, 2600);
+    setHeroineCheer(`「みんなの想いをひとつにっ！ スターライト・共鳴バーストっ☆」`);
+
+    let cleared = 0;
+    const centerR = Math.floor(ROWS / 2);
+    const centerC = Math.floor(COLS / 2);
+    for (let r = 1; r < ROWS - 1; r++) {
+      for (let c = 1; c < COLS - 1; c++) {
+        if (state.grid[r][c]) {
+          spawnGemBurst(r, c, GEMS[state.grid[r][c].type].color);
+          state.grid[r][c] = null;
+          cleared++;
+        }
+      }
+    }
+    spawnNovaBurst(centerR, centerC, '#ffd166');
+    state.score += cleared * 140 + 600;
+    state.moe += 25;
+    updateHud();
+
+    await sleep(260);
+    dropAndRefill(state.grid);
+    await sleep(180);
+    await resolveMatchesLoop();
+    checkStageOutcome();
+    state.busy = false;
+  }
+
+  function checkStageOutcome() {
+    const stg = STAGES[state.stageIdx] || STAGES[0];
+    if (state.score >= stg.goal) {
+      sfx.stageClear();
+      if (state.stageIdx < STAGES.length - 1) {
+        state.maxUnlockedStage = Math.max(state.maxUnlockedStage, state.stageIdx + 2);
+        openStorySequence('clear');
+      } else {
+        openStorySequence('ending');
+      }
+      return;
+    }
+
+    if (state.movesLeft <= 0) {
+      const bonus = 8;
+      state.movesLeft += bonus;
+      showToast(`残り手数が尽きたけど、ヒロインの応援で+${bonus}手延長♡`);
+      setHeroineCheer(`「まだあきらめないでっ！ もう${bonus}手、一緒にがんばろっ♡」`);
+      updateHud();
+    }
+  }
+
+  /* =========================================================
+     4. CANVAS PORTRAITS, BOARD & PARTICLE EFFECTS
+     ========================================================= */
+  function fitCanvas(canvas) {
+    if (!canvas) return { ctx: null, w: 0, h: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(1, Math.round(rect.width));
+    const h = Math.max(1, Math.round(rect.height));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const pw = Math.round(w * dpr);
+    const ph = Math.round(h * dpr);
+    if (canvas.width !== pw || canvas.height !== ph) {
+      canvas.width = pw;
+      canvas.height = ph;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w, h };
+  }
+
+  function drawMoeHeroine(ctx, heroine, cx, cy, scale, now) {
+    if (!heroine) return;
+    ctx.save();
+    const sway = Math.sin(now / 340) * 3;
+    const bounce = Math.abs(Math.sin(now / 520)) * 3.5;
+    ctx.translate(cx + sway, cy - bounce);
+    ctx.scale(scale, scale);
+
+    // Soft aura ring
+    const aura = ctx.createRadialGradient(0, -6, 6, 0, -6, 56);
+    aura.addColorStop(0, 'rgba(255, 110, 199, 0.34)');
+    aura.addColorStop(1, 'rgba(255, 110, 199, 0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(0, -6, 56, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Twin tails / side hair
+    ctx.fillStyle = heroine.hair;
+    ctx.strokeStyle = '#240b36';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.ellipse(-28, -8, 10, 22, 0.25, 0, Math.PI * 2);
+    ctx.ellipse(28, -8, 10, 22, -0.25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Outfit shoulders
+    ctx.fillStyle = heroine.outfit;
+    ctx.beginPath();
+    ctx.roundRect(-28, 18, 56, 36, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    // Collar ribbon
+    ctx.fillStyle = heroine.ribbon;
+    ctx.beginPath();
+    ctx.moveTo(-10, 18);
+    ctx.lineTo(0, 30);
+    ctx.lineTo(10, 18);
+    ctx.closePath();
+    ctx.fill();
+
+    // Face
+    ctx.fillStyle = '#fff0e6';
+    ctx.beginPath();
+    ctx.arc(0, -8, 21, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Bangs
+    ctx.fillStyle = heroine.hair;
+    ctx.beginPath();
+    ctx.arc(0, -12, 22, Math.PI * 0.92, Math.PI * 2.08);
+    ctx.lineTo(20, -2);
+    ctx.lineTo(8, -10);
+    ctx.lineTo(0, -4);
+    ctx.lineTo(-9, -11);
+    ctx.lineTo(-20, -2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Ribbons
+    ctx.fillStyle = heroine.ribbon;
+    ctx.beginPath();
+    ctx.arc(-22, -22, 5.5, 0, Math.PI * 2);
+    ctx.arc(22, -22, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Moe eyes & blink
+    const blinking = (Math.floor(now / 150) % 27) === 0;
+    ctx.strokeStyle = heroine.eye;
+    ctx.fillStyle = heroine.eye;
+    ctx.lineWidth = 2.2;
+    [-8.5, 8.5].forEach(ex => {
+      if (blinking) {
+        ctx.beginPath();
+        ctx.moveTo(ex - 4, -6);
+        ctx.lineTo(ex + 4, -6);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(ex, -6, 3.8, 5.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(ex - 1.2, -8, 1.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = heroine.eye;
+      }
+    });
+
+    // Blush & sweet smile
+    ctx.fillStyle = 'rgba(251, 113, 133, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(-13, 1, 5, 2.6, 0, 0, Math.PI * 2);
+    ctx.ellipse(13, 1, 5, 2.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#be185d';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 3, 4.5, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  let boardLayout = { x: 0, y: 0, size: 48 };
+
+  function spawnGemBurst(r, c, color) {
+    const cx = boardLayout.x + (c + 0.5) * boardLayout.size;
+    const cy = boardLayout.y + (r + 0.5) * boardLayout.size;
+    for (let i = 0; i < 10; i++) {
+      const ang = (Math.PI * 2 * i) / 10 + Math.random() * 0.4;
+      const spd = 1.6 + Math.random() * 3.4;
+      state.particles.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd - 0.8,
+        life: 1,
+        color,
+        r: 2.5 + Math.random() * 2.5
+      });
+    }
+  }
+
+  function spawnBeam(r, _c, color) {
+    const y = boardLayout.y + (r + 0.5) * boardLayout.size;
+    state.beams.push({
+      x1: boardLayout.x,
+      y1: y,
+      x2: boardLayout.x + boardLayout.size * COLS,
+      y2: y,
+      life: 1,
+      color
+    });
+  }
+
+  function spawnNovaBurst(r, c, color) {
+    const cx = boardLayout.x + (c + 0.5) * boardLayout.size;
+    const cy = boardLayout.y + (r + 0.5) * boardLayout.size;
+    for (let i = 0; i < 24; i++) {
+      const ang = (Math.PI * 2 * i) / 24;
+      const spd = 2.4 + Math.random() * 4.2;
+      state.particles.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd,
+        life: 1,
+        color,
+        r: 3 + Math.random() * 2.5
+      });
+    }
+  }
+
+  function drawPuzzleBoard(ctx, w, h, now) {
+    ctx.clearRect(0, 0, w, h);
+    const pad = 8;
+    const cellSize = Math.floor(Math.min((w - pad * 2) / COLS, (h - pad * 2) / ROWS));
+    const gridW = cellSize * COLS;
+    const gridH = cellSize * ROWS;
+    const ox = Math.floor((w - gridW) / 2);
+    const oy = Math.floor((h - gridH) / 2);
+    boardLayout = { x: ox, y: oy, size: cellSize };
+
+    // Board backing
+    ctx.fillStyle = 'rgba(17, 7, 34, 0.72)';
+    ctx.beginPath();
+    ctx.roundRect(ox - 4, oy - 4, gridW + 8, gridH + 8, 12);
+    ctx.fill();
+
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const x = ox + c * cellSize;
+        const y = oy + r * cellSize;
+        const isCursor = state.cursor.r === r && state.cursor.c === c;
+        const isSel = state.selected && state.selected.r === r && state.selected.c === c;
+
+        ctx.fillStyle = (r + c) % 2 === 0 ? 'rgba(62, 27, 108, 0.42)' : 'rgba(43, 18, 79, 0.42)';
+        ctx.strokeStyle = isSel ? '#fef08a' : (isCursor ? '#67e8f9' : 'rgba(255, 182, 224, 0.16)');
+        ctx.lineWidth = isSel || isCursor ? 2.4 : 1;
+        ctx.beginPath();
+        ctx.roundRect(x + 2, y + 2, cellSize - 4, cellSize - 4, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        const cell = state.grid[r]?.[c];
+        if (!cell) continue;
+        const gInfo = GEMS[cell.type] || GEMS[0];
+        const pulse = isSel ? 1 + Math.sin(now / 90) * 0.09 : 1;
+
+        ctx.save();
+        ctx.translate(x + cellSize / 2, y + cellSize / 2);
+        ctx.scale(pulse, pulse);
+
+        ctx.fillStyle = gInfo.bg;
+        ctx.strokeStyle = cell.special === 'nova' ? '#ffd166' : (cell.special === 'line' ? '#67e8f9' : gInfo.color);
+        ctx.lineWidth = cell.special !== 'none' ? 2.6 : 1.8;
+        ctx.beginPath();
+        ctx.roundRect(-cellSize * 0.36, -cellSize * 0.36, cellSize * 0.72, cellSize * 0.72, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = gInfo.color;
+        ctx.font = `900 ${Math.round(cellSize * 0.44)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(gInfo.glyph, 0, 1);
+
+        if (cell.special !== 'none') {
+          ctx.fillStyle = '#fef08a';
+          ctx.font = `900 ${Math.round(cellSize * 0.22)}px sans-serif`;
+          ctx.fillText(cell.special === 'nova' ? '★' : '⚡', cellSize * 0.24, -cellSize * 0.24);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // Beams
+    for (let i = state.beams.length - 1; i >= 0; i--) {
+      const b = state.beams[i];
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, b.life);
+      ctx.strokeStyle = b.color;
+      ctx.lineWidth = 7 * b.life;
+      ctx.beginPath();
+      ctx.moveTo(b.x1, b.y1);
+      ctx.lineTo(b.x2, b.y2);
+      ctx.stroke();
+      ctx.restore();
+      b.life -= 0.08;
+      if (b.life <= 0) state.beams.splice(i, 1);
+    }
+
+    // Sparkle particles
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+      const p = state.particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.12;
+      p.life -= 0.04;
+      if (p.life <= 0) {
+        state.particles.splice(i, 1);
+        continue;
+      }
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function renderAllCanvases(now = 0) {
+    const pFit = fitCanvas(document.getElementById('puzzle-canvas'));
+    if (pFit.ctx) {
+      drawPuzzleBoard(pFit.ctx, pFit.w, pFit.h, now);
+    }
+
+    const stg = STAGES[state.stageIdx] || STAGES[0];
+    const activeHeroine = HEROINES[stg.heroineIdx] || HEROINES[0];
+
+    const hFit = fitCanvas(document.getElementById('heroine-canvas'));
+    if (hFit.ctx) {
+      hFit.ctx.clearRect(0, 0, hFit.w, hFit.h);
+      drawMoeHeroine(hFit.ctx, activeHeroine, hFit.w * 0.5, hFit.h * 0.58, Math.max(0.85, hFit.w / 92), now);
+    }
+
+    const titleScreen = document.getElementById('title-screen');
+    if (titleScreen && titleScreen.classList.contains('active')) {
+      const tFit = fitCanvas(document.getElementById('title-showcase-canvas'));
+      if (tFit.ctx) {
+        tFit.ctx.clearRect(0, 0, tFit.w, tFit.h);
+        const sc = Math.max(0.68, tFit.h / 165);
+        HEROINES.forEach((hr, idx) => {
+          const x = tFit.w * ((idx + 0.5) / HEROINES.length);
+          drawMoeHeroine(tFit.ctx, hr, x, tFit.h * 0.62, sc, now);
+        });
+      }
+    }
+
+    const storyScreen = document.getElementById('story-screen');
+    if (storyScreen && storyScreen.classList.contains('active')) {
+      const sFit = fitCanvas(document.getElementById('story-portrait-canvas'));
+      if (sFit.ctx) {
+        sFit.ctx.clearRect(0, 0, sFit.w, sFit.h);
+        const curEntry = state.storyQueue[state.storyIndex];
+        const hr = curEntry?.heroine || activeHeroine;
+        drawMoeHeroine(sFit.ctx, hr, sFit.w * 0.5, sFit.h * 0.62, Math.max(1.15, sFit.h / 145), now);
+      }
+    }
+
+    requestAnimationFrame(renderAllCanvases);
+  }
+
+  /* =========================================================
+     5. POINTER (DRAG OR TAP) & KEYBOARD INPUT ON BOARD
+     ========================================================= */
+  let pointerDownCell = null;
+
+  function cellFromClientPos(clientX, clientY) {
+    const canvas = document.getElementById('puzzle-canvas');
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const c = Math.floor((x - boardLayout.x) / boardLayout.size);
+    const r = Math.floor((y - boardLayout.y) / boardLayout.size);
+    if (r >= 0 && r < ROWS && c >= 0 && c < COLS) return { r, c };
+    return null;
+  }
+
+  const puzzleCanvas = document.getElementById('puzzle-canvas');
+
+  puzzleCanvas.addEventListener('pointerdown', (e) => {
+    if (state.busy || isOverlayActive()) return;
+    sfx.unlock();
+    const pt = cellFromClientPos(e.clientX, e.clientY);
+    if (!pt) return;
+    pointerDownCell = pt;
+    state.cursor = { r: pt.r, c: pt.c };
+    sfx.select();
+  });
+
+  puzzleCanvas.addEventListener('pointerup', (e) => {
+    if (!pointerDownCell || state.busy || isOverlayActive()) return;
+    const upPt = cellFromClientPos(e.clientX, e.clientY);
+    const startPt = pointerDownCell;
+    pointerDownCell = null;
+
+    if (upPt && (upPt.r !== startPt.r || upPt.c !== startPt.c)) {
+      const dr = upPt.r - startPt.r;
+      const dc = upPt.c - startPt.c;
+      if (Math.abs(dr) + Math.abs(dc) === 1) {
+        attemptSwap(startPt.r, startPt.c, upPt.r, upPt.c);
+        return;
+      }
+      if (Math.abs(dr) >= Math.abs(dc) && dr !== 0) {
+        attemptSwap(startPt.r, startPt.c, startPt.r + Math.sign(dr), startPt.c);
+        return;
+      }
+      if (dc !== 0) {
+        attemptSwap(startPt.r, startPt.c, startPt.r, startPt.c + Math.sign(dc));
+        return;
+      }
+    }
+
+    // Tap-to-select / tap-adjacent-to-swap
+    if (!state.selected) {
+      state.selected = { r: startPt.r, c: startPt.c };
+    } else if (state.selected.r === startPt.r && state.selected.c === startPt.c) {
+      state.selected = null;
+    } else if (Math.abs(state.selected.r - startPt.r) + Math.abs(state.selected.c - startPt.c) === 1) {
+      const prev = state.selected;
+      attemptSwap(prev.r, prev.c, startPt.r, startPt.c);
+    } else {
+      state.selected = { r: startPt.r, c: startPt.c };
+    }
+  });
+
+  /* =========================================================
+     6. STORY, STAGE CLEAR & GRAND ENDING FLOW
+     ========================================================= */
+  function startStage(idx, resetScoreForStage = false) {
+    state.stageIdx = Math.max(0, Math.min(STAGES.length - 1, idx));
+    const stg = STAGES[state.stageIdx];
+    state.movesLeft = stg.moves;
+    if (resetScoreForStage) {
+      state.score = 0;
+    }
+    state.selected = null;
+    state.cursor = { r: 3, c: 2 };
+    state.grid = generatePlayableGrid();
+    setHeroineCheer(HEROINES[stg.heroineIdx].cheerLines[0]);
+    updateHud();
+  }
+
+  function openStorySequence(mode) {
+    state.storyMode = mode;
+    const stg = STAGES[state.stageIdx] || STAGES[0];
+    const hr = HEROINES[stg.heroineIdx] || HEROINES[0];
+
+    if (mode === 'intro') {
+      document.getElementById('story-screen-title').textContent = `📖 ${stg.title}`;
+      state.storyQueue = [
+        {
+          heroine: hr,
+          speaker: `${hr.name}（${hr.role}）`,
+          text: hr.intro
+        },
+        {
+          heroine: hr,
+          speaker: '共鳴ルールナビ',
+          text: `目標スコア【${stg.goal.toLocaleString()}pt】を残り${stg.moves}手以内に達成しよう！ 4つでビーム、5つで超新星、ゲージ100%で共鳴バーストが発動するよ♡`
+        }
+      ];
+    } else if (mode === 'clear') {
+      document.getElementById('story-screen-title').textContent = `🎉 ${stg.title} クリア！`;
+      state.storyQueue = [
+        {
+          heroine: hr,
+          speaker: `${hr.name}（満面の笑み）`,
+          text: `「やったぁっ！ 目標達成おめでとうっ♡ キミのおかげでスターライトがもっと明るく輝いたよ♪ 次のステージでも待ってるからねっ☆」`
+        }
+      ];
+    } else {
+      const rank = state.moe >= 160 ? 'Sランク【超ときめき神共鳴エンド】' : 'Aランク【スターライト大団円エンド】';
+      document.getElementById('story-screen-title').textContent = `👑 ${rank}`;
+      state.storyQueue = [
+        {
+          heroine: HEROINES[4],
+          speaker: 'みるく＆4人のヒロインたち',
+          text: `「全5ステージ完全クリア、ほんとにおめでとうっ♡ ももかも、ほのかも、りんねも、さくらも、みんなキミのこと大好きだよ〜っ☆」`
+        },
+        {
+          heroine: HEROINES[0],
+          speaker: 'もえもえ共鳴パズル★スターライト・リンク【完】',
+          text: `最終スコア：${state.score.toLocaleString()}pt ／ 萌え度：${state.moe}%（${rank}）。キミとつないだ星のカケラは、永遠に輝き続けます♡`
+        }
+      ];
+    }
+
+    state.storyIndex = 0;
+    renderStorySlide();
+    document.getElementById('story-screen').classList.add('active');
+  }
+
+  function renderStorySlide() {
+    const entry = state.storyQueue[state.storyIndex];
+    if (!entry) return;
+    document.getElementById('story-speaker-tag').textContent = entry.speaker;
+    document.getElementById('story-body-text').textContent = entry.text;
+    const isLast = state.storyIndex >= state.storyQueue.length - 1;
+    const btn = document.getElementById('btn-story-next');
+    if (state.storyMode === 'intro') {
+      btn.textContent = isLast ? 'パズルスタート！ ▶' : '次のセリフへ ▶';
+    } else if (state.storyMode === 'clear') {
+      btn.textContent = '次のステージへ進む！ ▶';
+    } else {
+      btn.textContent = isLast ? 'タイトルへ戻る 🏠' : '次のセリフへ ▶';
+    }
+  }
+
+  function finishStoryScreen() {
+    document.getElementById('story-screen').classList.remove('active');
+    if (state.storyMode === 'intro') {
+      updateHud();
+    } else if (state.storyMode === 'clear') {
+      startStage(state.stageIdx + 1, false);
+      openStorySequence('intro');
+    } else {
+      document.getElementById('title-screen').classList.add('active');
+    }
+  }
+
+  /* =========================================================
+     7. LOCALSTORAGE SAVE / LOAD / INDIVIDUAL & ALL DELETE
+     ========================================================= */
+  function readSaves() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      return raw ? (JSON.parse(raw) || {}) : {};
+    } catch (_e) {
+      return {};
+    }
+  }
+
+  function writeSaves(obj) {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(obj));
+    } catch (_e) {
+      showToast('セーブデータの保存に失敗しました。');
+    }
+  }
+
+  function saveSlot(slotNum) {
+    const stg = STAGES[state.stageIdx] || STAGES[0];
+    const now = new Date();
+    const ts = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const saves = readSaves();
+    saves[String(slotNum)] = {
+      slotNum,
+      stageIdx: state.stageIdx,
+      stageTitle: stg.title,
+      score: state.score,
+      movesLeft: state.movesLeft,
+      moe: state.moe,
+      burstGauge: state.burstGauge,
+      maxUnlockedStage: state.maxUnlockedStage,
+      grid: state.grid,
+      timestamp: ts
+    };
+    writeSaves(saves);
+    state.pendingDelSlot = null;
+    sfx.select();
+    showToast(`スロット ${slotNum} にセーブしました♡`);
+    renderSaveScreen();
+  }
+
+  function loadSlot(slotNum) {
+    const saves = readSaves();
+    const data = saves[String(slotNum)];
+    if (!data || !Array.isArray(data.grid)) {
+      showToast('このスロットにセーブデータはありません。');
+      return;
+    }
+    state.stageIdx = Math.max(0, Math.min(STAGES.length - 1, data.stageIdx || 0));
+    state.score = data.score || 0;
+    state.movesLeft = data.movesLeft ?? STAGES[state.stageIdx].moves;
+    state.moe = data.moe || 0;
+    state.burstGauge = data.burstGauge || 0;
+    state.maxUnlockedStage = Math.max(state.maxUnlockedStage, data.maxUnlockedStage || 1);
+    state.grid = data.grid;
+    state.selected = null;
+    state.busy = false;
+    closeAllOverlays();
+    document.getElementById('title-screen').classList.remove('active');
+    setHeroineCheer();
+    updateHud();
+    sfx.select();
+    showToast(`スロット ${slotNum} から再開しました♡`);
+  }
+
+  function deleteSingleSlot(slotNum) {
+    if (state.pendingDelSlot !== slotNum) {
+      state.pendingDelSlot = slotNum;
+      showToast(`もう一度「削除確定」を押すとスロット ${slotNum} を削除します。`);
+      renderSaveScreen();
+      return;
+    }
+    const saves = readSaves();
+    delete saves[String(slotNum)];
+    writeSaves(saves);
+    state.pendingDelSlot = null;
+    sfx.select();
+    showToast(`スロット ${slotNum} のセーブデータを削除しました。`);
+    renderSaveScreen();
+  }
+
+  function deleteAllSaves() {
+    if (!state.pendingPurgeAll) {
+      state.pendingPurgeAll = true;
+      document.getElementById('btn-delete-all-saves').textContent = '⚠ 全セーブデータ削除確定（取り消し不可）';
+      showToast('確認：もう一度押すと全セーブデータが削除されます。');
+      return;
+    }
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch (_e) {
+      // Ignore
+    }
+    state.pendingPurgeAll = false;
+    state.pendingDelSlot = null;
+    document.getElementById('btn-delete-all-saves').textContent = '🗑 すべてのセーブデータを削除する';
+    sfx.select();
+    showToast('すべてのセーブデータを削除しました。');
+    renderSaveScreen();
+  }
+
+  function openSaveScreen(mode) {
+    state.saveMode = mode;
+    state.pendingDelSlot = null;
+    state.pendingPurgeAll = false;
+    document.getElementById('btn-delete-all-saves').textContent = '🗑 すべてのセーブデータを削除する';
+    document.getElementById('save-screen-title').textContent =
+      mode === 'save' ? '💾 セーブスロット選択' : '📂 ロード・データ削除管理';
+    renderSaveScreen();
+    document.getElementById('save-screen').classList.add('active');
+  }
+
+  function renderSaveScreen() {
+    const list = document.getElementById('save-slots-list');
+    list.innerHTML = '';
+    const saves = readSaves();
+
+    for (let s = 1; s <= MAX_SLOTS; s++) {
+      const item = saves[String(s)];
+      const card = document.createElement('div');
+      card.className = 'card-panel';
+      card.style.display = 'flex';
+      card.style.flexDirection = 'column';
+      card.style.gap = '6px';
+
+      if (item) {
+        const delArmed = state.pendingDelSlot === s;
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong style="color:var(--gold);">SLOT ${s}：${item.stageTitle}</strong>
+            <span style="font-size:11px;color:var(--text-muted);">${item.timestamp}</span>
+          </div>
+          <div style="font-size:11.5px;color:#fbcfe8;">Pt: ${(item.score || 0).toLocaleString()} ｜ 残り${item.movesLeft ?? 0}手 ｜ 萌え度: ${item.moe || 0}%</div>
+          <div style="display:flex;gap:6px;">
+            ${state.saveMode === 'save'
+              ? `<button type="button" class="mini-btn gold" style="flex:1;" data-op="save" data-s="${s}">💾 上書きセーブ</button>`
+              : `<button type="button" class="mini-btn gold" style="flex:1;" data-op="load" data-s="${s}">📂 ロード再開</button>`
+            }
+            <button type="button" class="mini-btn danger" data-op="del" data-s="${s}">${delArmed ? '⚠ 削除確定' : '🗑 削除'}</button>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong style="color:var(--text-muted);">SLOT ${s}：空きスロット</strong>
+            ${state.saveMode === 'save'
+              ? `<button type="button" class="mini-btn gold" data-op="save" data-s="${s}">💾 ここにセーブ</button>`
+              : `<span style="font-size:11px;color:#94a3b8;">データなし</span>`
+            }
+          </div>
+        `;
+      }
+
+      card.querySelectorAll('button').forEach(btn => {
+        btn.onclick = () => {
+          const op = btn.dataset.op;
+          const slotId = parseInt(btn.dataset.s, 10);
+          if (op === 'save') saveSlot(slotId);
+          else if (op === 'load') loadSlot(slotId);
+          else if (op === 'del') deleteSingleSlot(slotId);
+        };
+      });
+
+      list.appendChild(card);
+    }
+  }
+
+  function openGuideScreen() {
+    const dex = document.getElementById('heroine-dex-list');
+    dex.innerHTML = '';
+    HEROINES.forEach((hr, idx) => {
+      const box = document.createElement('div');
+      box.className = 'card-panel';
+      box.style.padding = '8px 10px';
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:var(--gold);">${idx + 1}. ${hr.name}</strong>
+          <span style="font-size:11px;color:var(--pink-soft);">${hr.role}</span>
+        </div>
+        <div style="font-size:12px;margin-top:2px;">${hr.bio}</div>
+      `;
+      dex.appendChild(box);
+    });
+    document.getElementById('guide-screen').classList.add('active');
+  }
+
+  function openMenuScreen() {
+    const jump = document.getElementById('stage-jump-list');
+    jump.innerHTML = '';
+    STAGES.forEach((st, idx) => {
+      const unlocked = st.id <= state.maxUnlockedStage;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mini-btn';
+      btn.disabled = !unlocked;
+      btn.style.opacity = unlocked ? '1' : '0.45';
+      btn.style.textAlign = 'left';
+      btn.style.padding = '6px 9px';
+      btn.textContent = unlocked
+        ? `${st.title}（目標 ${st.goal.toLocaleString()}pt）`
+        : `${st.title}（🔒 未解放）`;
+      btn.onclick = () => {
+        closeAllOverlays();
+        document.getElementById('title-screen').classList.remove('active');
+        startStage(idx, false);
+        openStorySequence('intro');
+      };
+      jump.appendChild(btn);
+    });
+    document.getElementById('menu-screen').classList.add('active');
+  }
+
+  function isOverlayActive() {
+    return ['title-screen', 'story-screen', 'save-screen', 'guide-screen', 'menu-screen'].some(id => {
+      const el = document.getElementById(id);
+      return el && el.classList.contains('active');
+    });
+  }
+
+  function closeAllOverlays() {
+    ['story-screen', 'save-screen', 'guide-screen', 'menu-screen'].forEach(id => {
+      document.getElementById(id).classList.remove('active');
+    });
+    state.pendingDelSlot = null;
+    state.pendingPurgeAll = false;
+  }
+
+  function syncSoundLabels() {
+    const lbl = sfx.enabled ? '🔊 サウンド: ON' : '🔇 サウンド: OFF';
+    document.getElementById('btn-title-sound').innerHTML = `${lbl} <span class="kbadge">M</span>`;
+    document.getElementById('btn-menu-sound').textContent = `${sfx.enabled ? '🔊 サウンド: ON' : '🔇 サウンド: OFF'} [M]`;
+  }
+
+  /* =========================================================
+     8. BUTTON & KEYBOARD WIRING
+     ========================================================= */
+  document.getElementById('btn-burst').onclick = triggerResonanceBurst;
+  document.getElementById('btn-story').onclick = () => openStorySequence('intro');
+  document.getElementById('btn-save').onclick = () => openSaveScreen('save');
+  document.getElementById('btn-load').onclick = () => openSaveScreen('load');
+  document.getElementById('btn-guide').onclick = openGuideScreen;
+  document.getElementById('btn-menu').onclick = openMenuScreen;
+
+  document.getElementById('btn-start-new').onclick = () => {
+    sfx.unlock();
+    sfx.select();
+    state.score = 0;
+    state.moe = 10;
+    state.burstGauge = 25;
+    state.maxUnlockedStage = 1;
+    document.getElementById('title-screen').classList.remove('active');
+    startStage(0, true);
+    openStorySequence('intro');
+  };
+
+  document.getElementById('btn-title-load').onclick = () => {
+    sfx.unlock();
+    openSaveScreen('load');
+  };
+
+  document.getElementById('btn-title-guide').onclick = () => {
+    sfx.unlock();
+    openGuideScreen();
+  };
+
+  document.getElementById('btn-title-sound').onclick = () => {
+    sfx.toggle();
+    syncSoundLabels();
+  };
+
+  document.getElementById('btn-title-del').onclick = () => {
+    sfx.unlock();
+    openSaveScreen('load');
+    deleteAllSaves();
+  };
+
+  document.getElementById('btn-story-next').onclick = () => {
+    if (state.storyIndex < state.storyQueue.length - 1) {
+      state.storyIndex++;
+      renderStorySlide();
+    } else {
+      finishStoryScreen();
+    }
+  };
+
+  document.getElementById('btn-story-skip').onclick = finishStoryScreen;
+  document.getElementById('btn-close-save').onclick = closeAllOverlays;
+  document.getElementById('btn-delete-all-saves').onclick = deleteAllSaves;
+  document.getElementById('btn-close-guide').onclick = closeAllOverlays;
+  document.getElementById('btn-close-menu').onclick = closeAllOverlays;
+
+  document.getElementById('btn-menu-sound').onclick = () => {
+    sfx.toggle();
+    syncSoundLabels();
+  };
+
+  document.getElementById('btn-menu-retry').onclick = () => {
+    closeAllOverlays();
+    startStage(state.stageIdx, false);
+    showToast('このステージをやり直します♡');
+  };
+
+  document.getElementById('btn-menu-title').onclick = () => {
+    closeAllOverlays();
+    document.getElementById('title-screen').classList.add('active');
+  };
+
+  window.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+
+    if (k === 'm') {
+      sfx.toggle();
+      syncSoundLabels();
+      return;
+    }
+
+    if (k === 'escape') {
+      if (['save-screen', 'guide-screen', 'menu-screen'].some(id => document.getElementById(id).classList.contains('active'))) {
+        closeAllOverlays();
+      } else if (!document.getElementById('title-screen').classList.contains('active') && !document.getElementById('story-screen').classList.contains('active')) {
+        openMenuScreen();
+      }
+      return;
+    }
+
+    if (document.getElementById('title-screen').classList.contains('active')) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        document.getElementById('btn-start-new').click();
+      } else if (k === 'o') {
+        openSaveScreen('load');
+      }
+      return;
+    }
+
+    if (document.getElementById('story-screen').classList.contains('active')) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        document.getElementById('btn-story-next').click();
+      }
+      return;
+    }
+
+    if (isOverlayActive()) return;
+
+    if (k === 'arrowup' || k === 'w') {
+      e.preventDefault();
+      if (state.selected) {
+        attemptSwap(state.selected.r, state.selected.c, state.selected.r - 1, state.selected.c);
+      } else {
+        state.cursor.r = (state.cursor.r + ROWS - 1) % ROWS;
+        sfx.select();
+      }
+    } else if (k === 'arrowdown' || k === 's') {
+      e.preventDefault();
+      if (state.selected) {
+        attemptSwap(state.selected.r, state.selected.c, state.selected.r + 1, state.selected.c);
+      } else {
+        state.cursor.r = (state.cursor.r + 1) % ROWS;
+        sfx.select();
+      }
+    } else if (k === 'arrowleft' || k === 'a') {
+      e.preventDefault();
+      if (state.selected) {
+        attemptSwap(state.selected.r, state.selected.c, state.selected.r, state.selected.c - 1);
+      } else {
+        state.cursor.c = (state.cursor.c + COLS - 1) % COLS;
+        sfx.select();
+      }
+    } else if (k === 'arrowright' || k === 'd') {
+      e.preventDefault();
+      if (state.selected) {
+        attemptSwap(state.selected.r, state.selected.c, state.selected.r, state.selected.c + 1);
+      } else {
+        state.cursor.c = (state.cursor.c + 1) % COLS;
+        sfx.select();
+      }
+    } else if (k === 'z' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const { r, c } = state.cursor;
+      if (!state.selected) {
+        state.selected = { r, c };
+        sfx.select();
+      } else if (state.selected.r === r && state.selected.c === c) {
+        state.selected = null;
+        sfx.select();
+      } else if (Math.abs(state.selected.r - r) + Math.abs(state.selected.c - c) === 1) {
+        const prev = state.selected;
+        attemptSwap(prev.r, prev.c, r, c);
+      } else {
+        state.selected = { r, c };
+        sfx.select();
+      }
+    } else if (k === 'x' || k === 'e') {
+      e.preventDefault();
+      triggerResonanceBurst();
+    } else if (k === 'k') {
+      openSaveScreen('save');
+    } else if (k === 'o') {
+      openSaveScreen('load');
+    } else if (k === 'h') {
+      openGuideScreen();
+    }
+  });
+
+  // Initialize playable board behind title screen & start render loop
+  startStage(0, true);
+  requestAnimationFrame(renderAllCanvases);
+})();
+</script>
+</body>
+</html>
